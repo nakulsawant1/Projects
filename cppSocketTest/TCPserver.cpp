@@ -1,6 +1,7 @@
 #include <iostream>
 #include <ws2tcpip.h>
 #include <windows.h>
+#include <string>
 
 using namespace std;
 
@@ -29,7 +30,7 @@ int main() {
     sockaddr_in hint;
     hint.sin_family = AF_INET;
     hint.sin_port = htons(54000);
-    hint.sin_addr.S_un.S_addr = INADDR_ANY; // Could also unse inet_pton ...
+    hint.sin_addr.S_un.S_addr = INADDR_ANY; // Could also use inet_pton ...
 
     bind(listening, (sockaddr*)&hint, sizeof(hint));
 
@@ -63,14 +64,15 @@ int main() {
     closesocket(listening);
 
     // While loop: accept and echo message back to client
-    char buf[4096];
-    string keyWord = "";
+    char buf[1];
+    string keyWord = "Hello";
+    char wordle[6] = "_____";
 
     while (true){
-        ZeroMemory(buf, 4096);
+        ZeroMemory(buf, 1);
 
         // Wait for client to send data
-        int bytesReceived = recv(clientSocket, buf, 4096, 0);
+        int bytesReceived = recv(clientSocket, buf, 1, 0);
         if (bytesReceived == SOCKET_ERROR){
             cerr << "Error in recv(). Quitting" << endl;
             break;
@@ -83,10 +85,26 @@ int main() {
 
         // Update key word you are trying to guess
 
+        cout << "Checking if buff is null" << endl;
         // Echo message back to client
-
-        send(clientSocket, "hello", 5, 0);
-
+        if (buf[0] == '\0') {
+            cout << "Buff is null" << endl;
+            send(clientSocket, "The guess must be one character", 31, 0);
+        } else {
+            cout << "Checking if buf in keyword" << endl;
+            if (keyWord.find(buf[0]) != string::npos){
+                cout << "Buf in keyword" << keyWord.length() << endl;
+                for (int i=0; i < keyWord.length() + 1; i++){
+                    if (keyWord[i] == buf[0]) {
+                        cout << keyWord[i] << endl;
+                        cout << buf[0] << endl;
+                        wordle[i] = buf[0];
+                    }
+                }
+            }
+        }
+        cout << wordle << endl;
+        send(clientSocket, wordle, 6, 0);
     }
 
     // Close the socket
