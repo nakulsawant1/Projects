@@ -2,12 +2,17 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 #include <string>
+#include <vector>
+#include <random>
+#include <ctime>
 
 using namespace std;
 
 int main() {
 
     // Create the TCP server
+    // Initialize words in game
+    vector<string> words = {"texas","chair", "robin", "space", "phone", "radio", "fraud", "steam", "alter", "tower"};
 
     // Initialize winsock
     WSADATA wsData;
@@ -65,8 +70,16 @@ int main() {
 
     // While loop: accept and echo message back to client
     char buf[1];
-    string keyWord = "Hello";
     char wordle[6] = "_____";
+
+    // Generate the random number generater
+    mt19937 gen(time(0)); // This will generate the random number variable "gen" with a input seed of time to make it really random
+    uniform_int_distribution<> distrib(0,9);
+
+    // Update key word you are trying to guess
+    // Generate the random number
+    int randomValue = distrib(gen);
+    string keyWord = words[randomValue];
 
     while (true){
         ZeroMemory(buf, 1);
@@ -83,17 +96,11 @@ int main() {
             break;
         }
 
-        // Update key word you are trying to guess
-
-        cout << "Checking if buff is null" << endl;
         // Echo message back to client
         if (buf[0] == '\0') {
-            cout << "Buff is null" << endl;
             send(clientSocket, "The guess must be one character", 31, 0);
         } else {
-            cout << "Checking if buf in keyword" << endl;
             if (keyWord.find(buf[0]) != string::npos){
-                cout << "Buf in keyword" << keyWord.length() << endl;
                 for (int i=0; i < keyWord.length() + 1; i++){
                     if (keyWord[i] == buf[0]) {
                         cout << keyWord[i] << endl;
