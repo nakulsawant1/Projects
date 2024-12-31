@@ -6,11 +6,16 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <string>
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 
 
 int main(){
+    // Initialize words in game
+    vector<string> words = {"TEXAS","CHAIR", "ROBIN", "SPACE", "PHONE", "RADIO", "FRAUD", "STEAM", "ALTER", "TOWER"};
+
     // Create the socket 
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == -1){
@@ -52,7 +57,12 @@ int main(){
         int bytesReceived = recv(sock, buf, 4096, 0);
 
         // Display
-        cout << "SERVER>" << string(buf, bytesReceived) << endl;
+        cout << "Wordle: " << string(buf, bytesReceived) << endl;
+
+        if (find(words.begin(), words.end(), buf) != words.end()){
+            cout << "Congratulations you solved the wordle!!" << endl;
+            break;
+        }
 
     } while(true);
 

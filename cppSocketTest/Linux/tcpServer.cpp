@@ -7,11 +7,20 @@
 #include <arpa/inet.h>
 #include <string>
 #include <errno.h>
+#include <vector>
+#include <random>
+#include <ctime>
 
 using namespace std;
 
 
 int main(){
+
+    // Initialize words in game
+    vector<string> words = {"TEXAS","CHAIR", "ROBIN", "SPACE", "PHONE", "RADIO", "FRAUD", "STEAM", "ALTER", "TOWER"};
+    string wordle = "_____";
+    bool completed;
+
     // Create the socket 
     int listening = socket(AF_INET, SOCK_STREAM, 0);
     if (listening == -1){
@@ -49,6 +58,7 @@ int main(){
     }
 
     // Close the listening socket
+    cout << "Listening socket is closed, connection is accepted" << endl;
     close(listening);
 
     memset(host, 0, NI_MAXHOST);
@@ -62,6 +72,15 @@ int main(){
         inet_ntop(AF_INET, &client.sin_addr, host, NI_MAXHOST);
         cout << host <<  " connected on " << ntohs(client.sin_port) << endl;
     }
+
+    // Generate the random number generater
+    mt19937 gen(time(0)); // This will generate the random number variable "gen" with a input seed of time to make it really random
+    uniform_int_distribution<> distrib(0,9);
+
+    // Update key word you are trying to guess
+    // Generate the random number
+    int randomValue = distrib(gen);
+    string keyWord = words[randomValue];
 
     // While receiving display the message and echo
     char buf[4096];
@@ -79,17 +98,47 @@ int main(){
         if (bytesReceived == 0){
             cout << "The client disconnected" << endl;
             break;
+        } else if (bytesReceived == 6){
+            // Check to see if the keyWord matches
+            if (buf == keyWord){
+                wordle = keyWord;
+                completed = true;
+            } else {
+                for (int i=0; i<6; i++){
+                    for (int y=i; y<6; y++){
+                        if (tolower(buf[i]) == tolower(keyWord[y])){
+                            if (i == y){
+                                // The letter and location is correct
+                                cout << buf[i] << " is correct" << endl;
+                                wordle[i] = toupper(buf[i]);
+                            } else {
+                                // The letter is correct but wrong location
+                                cout << buf[i] << " is correct but wrong place" << endl;
+                                if (wordle[i] != toupper(keyWord[y])){
+                                    // Checking to see if the number is already uppercase
+                                    wordle[i] = tolower(buf[i]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
+
 
         // Display the message 
         cout << "Received: " << string(buf, 0, bytesReceived) << endl;
 
         // Resend the message
-        send(clientSocket, buf, bytesReceived + 1, 0);
+        send(clientSocket, wordle.c_str(), 6, 0);
 
+        if (completed){
+            break;
+        }
     }
 
     // Close the socket
     close(clientSocket);
+    cout << "Socket is closed" << endl;
     return 0;
 }
