@@ -10,56 +10,25 @@
 #include <vector>
 #include <random>
 #include <ctime>
+#include <functional>
+#include <thread>
 
 using namespace std;
 
+int socketThread(sockaddr_in client, socklen_t clientSize, int clientSocket, int threadNumber){
 
-int main(){
+    // Which thread are you?
+    cout << "I am thread " << threadNumber << endl;
 
+    // Initialize the variables required for the wordle game
     // Initialize words in game
     vector<string> words = {"TEXAS","CHAIR", "ROBIN", "SPACE", "PHONE", "RADIO", "FRAUD", "STEAM", "ALTER", "TOWER"};
     string wordle = "_____";
     bool completed;
 
-    // Create the socket 
-    int listening = socket(AF_INET, SOCK_STREAM, 0);
-    if (listening == -1){
-        cerr << "Can't create a socket!";
-        return -1;
-    }
-
-    // Bind the socket to ip and port
-    sockaddr_in hint;
-    hint.sin_family = AF_INET;
-    hint.sin_port = htons(54000); // Host to network short
-    inet_pton(AF_INET, "0.0.0.0", &hint.sin_addr); // Converts a number to an array of integers ex. 127.0.0.1
-
-    if (bind(listening, (sockaddr*)&hint, sizeof(hint)) == -1){
-        cerr << "Can't bind to IP port!";
-        return -2;
-    }
-
-    // Mark the socket for listening
-    if (listen(listening, SOMAXCONN) == -1){
-        cerr << "Can't listen!";
-        return -3;
-    }
-
     // Accept a call
-    sockaddr_in client;
-    socklen_t clientSize = sizeof(client);
     char host[NI_MAXHOST];
     char svc[NI_MAXSERV];
-
-    int clientSocket = accept(listening, (sockaddr*)&client, &clientSize);
-    if (clientSocket == -1){
-        cerr << "Can't accept the socket!";
-        return -4;
-    }
-
-    // Close the listening socket
-    cout << "Listening socket is closed, connection is accepted" << endl;
-    close(listening);
 
     memset(host, 0, NI_MAXHOST);
     memset(svc, 0, NI_MAXSERV);
@@ -140,5 +109,54 @@ int main(){
     // Close the socket
     close(clientSocket);
     cout << "Socket is closed" << endl;
+    return 0;
+}
+
+int main(){
+
+    while (true){
+        int i = 1;
+
+        // Create the socket 
+        int listening = socket(AF_INET, SOCK_STREAM, 0);
+        if (listening == -1){
+            cerr << "Can't create a socket!";
+            return -1;
+        }
+
+        // Bind the socket to ip and port
+        sockaddr_in hint;
+        hint.sin_family = AF_INET;
+        hint.sin_port = htons(54000+i); // Host to network short
+        inet_pton(AF_INET, "0.0.0.0", &hint.sin_addr); // Converts a number to an array of integers ex. 127.0.0.1
+
+        if (bind(listening, (sockaddr*)&hint, sizeof(hint)) == -1){
+            cerr << "Can't bind to IP port!";
+            return -2;
+        }
+
+        // Mark the socket for listening
+        if (listen(listening, SOMAXCONN) == -1){
+            cerr << "Can't listen!";
+            return -3;
+        }
+
+        sockaddr_in client;
+        socklen_t clientSize = sizeof(client);
+
+        // Wait for a socket connection to come through and once accepted create a thread to handle that socket connection
+        cout << "Trying to accept socket connection." << endl;
+        int clientSocket = accept(listening, (sockaddr*)&client, &clientSize);
+        if (clientSocket == -1){
+            cerr << "Can't accept the socket!";
+            return -4;
+        }
+
+        std::thread socketThreadServer(socketThread, client, clientSize, clientSocket, ref(i));
+        socketThreadServer.join();
+
+        i++;
+    }
+
     return 0;
 }
