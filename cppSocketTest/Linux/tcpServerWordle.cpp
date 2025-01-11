@@ -15,10 +15,10 @@
 
 using namespace std;
 
-int socketThread(sockaddr_in client, socklen_t clientSize, int clientSocket, int threadNumber){
+int socketThread(sockaddr_in client, socklen_t clientSize, int clientSocket, int &threadNumber){
 
-    // Which thread are you?
-    cout << "I am thread " << threadNumber << endl;
+    // Increment the thread counter
+    threadNumber++;
 
     // Initialize the variables required for the wordle game
     // Initialize words in game
@@ -109,13 +109,26 @@ int socketThread(sockaddr_in client, socklen_t clientSize, int clientSocket, int
     // Close the socket
     close(clientSocket);
     cout << "Socket is closed" << endl;
+
+    // // Decrement the thread counter
+    // threadNumber--;
+
     return 0;
 }
 
 int main(){
 
     while (true){
-        int i = 1;
+        int i = 0;
+
+        cin >> i;
+
+        // if (i > 10){
+        //     cout << "Too many games are running, please wait for one game to end" << endl;
+        //     while (i > 10){
+
+        //     }
+        // }
 
         // Create the socket 
         int listening = socket(AF_INET, SOCK_STREAM, 0);
@@ -152,10 +165,11 @@ int main(){
             return -4;
         }
 
-        std::thread socketThreadServer(socketThread, client, clientSize, clientSocket, ref(i));
-        socketThreadServer.join();
+        std::thread {socketThread, client, clientSize, clientSocket, ref(i)}.detach();
+        // socketThreadServer.join();
 
-        i++;
+        // i++;
+
     }
 
     return 0;

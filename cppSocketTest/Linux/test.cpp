@@ -27,10 +27,15 @@ void test2(int &i){
 
 int main(){
     int i = 0;
-    std::thread firstThread(test1, std::ref(i));
-    std::thread secondThread(test1, std::ref(i));
-    firstThread.join();
-    firstThread.join();
+    std::thread{test1, std::ref(i)}.detach();
+    std::thread{test2, std::ref(i)}.detach();
+    // firstThread.join();
+    // firstThread.join();
     // secondThread.join();
+
+    while (i<10){
+        
+    }
+
     return 0;
 }

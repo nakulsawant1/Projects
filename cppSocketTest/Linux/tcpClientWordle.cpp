@@ -16,6 +16,10 @@ int main(){
     // Initialize words in game
     vector<string> words = {"TEXAS","CHAIR", "ROBIN", "SPACE", "PHONE", "RADIO", "FRAUD", "STEAM", "ALTER", "TOWER"};
 
+    // Initialize the game number
+    int i = 0;
+    cin >> i;
+
     // Create the socket 
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == -1){
@@ -27,7 +31,7 @@ int main(){
     sockaddr_in hint;
     string ipAddress = "127.0.0.1";
     hint.sin_family = AF_INET;
-    hint.sin_port = htons(54000); // Host to network short
+    hint.sin_port = htons(54000+i); // Host to network short
     inet_pton(AF_INET, ipAddress.c_str(), &hint.sin_addr); // Converts a number to an array of integers ex. 127.0.0.1
 
     int connectResult = connect(sock, (sockaddr*)&hint, sizeof(hint));
